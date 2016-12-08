@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>TEST</title>
+    <script src="https://npmcdn.com/react@15.3.1/dist/react.js"></script>
+    <script src="https://npmcdn.com/react-dom@15.3.1/dist/react-dom.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/react/0.13.3/JSXTransformer.js"></script>
+    <script src="https://npmcdn.com/jquery@3.1.0/dist/jquery.min.js"></script>
+    <script src="https://npmcdn.com/remarkable@1.6.2/dist/remarkable.min.js"></script>
+<style type="text/css">
+  html,body{width:100%;height:100%;margin:0;padding:0;}
+  #content{width: 100%;height: 100%;background-color: #e2e2e2;overflow: hidden;}
+  .state{width: 100%;height: 100%;position: relative;}
+  .cellimg{display: inline-block;width:240px;height:280px;background-color: #fff;padding:10px;margin:10px;box-sizing: border-box;position: absolute;border-radius:4px;cursor: pointer;transition: all 0.8s;}
+  .cellimg img{width: 100%;}
+  figcaption{text-align: center;}
+
+  @media screen and (max-width: 640px){
+    .cellimg{width:150px;height:190px;}
+  }
+</style>
+
+  </head>
+  <body>
+    <div id="content"></div>
+<script type="text/jsx">
+var data = [
+  {url:'images/1.jpg',title:'Hello 美女',desc:'Hello 美女'},
+  {url:'images/2.jpg',title:'Hello 美女',desc:'Hello 美女'},
+  {url:'images/3.jpg',title:'Hello 美女',desc:'Hello 美女'},
+  {url:'images/4.jpg',title:'Hello 美女',desc:'Hello 美女'},
+  {url:'images/5.jpg',title:'Hello 美女',desc:'Hello 美女'},
+  {url:'images/6.jpg',title:'Hello 美女',desc:'Hello 美女'},
+  {url:'images/7.jpg',title:'Hello 美女',desc:'Hello 美女'},
+  {url:'images/8.jpg',title:'Hello 美女',desc:'Hello 美女'},
+  {url:'images/9.jpg',title:'Hello 美女',desc:'Hello 美女'},
+  {url:'images/10.jpg',title:'Hello 美女',desc:'Hello 美女k'},
+  {url:'images/11.jpg',title:'Hello 美女',desc:'Hello 美女'},
+  {url:'images/12.jpg',title:'Hello 美女',desc:'Hello 美女'},
+];
+
+function getAutoDeg30(){
+  return (Math.random() > 0.5 ? '':'-') + Math.ceil(Math.random()*30);
+}
+
+var Imgfigure = React.createClass({
+  handleclick:function(e){
+    if(!this.props.posinfo.iscenter){
+     //console.log("click");
+      this.props.center();
+
+      e.stopPropagation();
+      e.preventDefault();
+    }else{
+      this.props.turn();
+    }
+  },
+  render:function(){
+    var styleobj = {};
+    styleobj = this.props.posinfo.pos;
+    if(this.props.posinfo.iscenter){
+      styleobj['zIndex'] = '1000';//增加z-index属性
+    }
+
+    if(this.props.posinfo.rotate){
+      ['Webkit','Ms','Moz'].forEach(function(value,index){
+        styleobj[value+'Transform'] = 'rotate('+this.props.posinfo.rotate+'deg)';
+      }.bind(this));
+    }
+  
+    return (
+      <figure className="cellimg" style={ styleobj } onClick = { this.handleclick }>
+        <img src = { this.props.data.url } alt = {this.props.data.title} />
+        <figcaption>{ this.props.data.title }</figcaption>
+      </figure>
+    );
+  }
+});
+
+var Reactbox = React.createClass({
+  constant:{
+    winW:0,
+    winH:0,
+    cellW:0,
+    cellH:0
+  },
+
+  turn:function(index){
+    
+  },
+
+  reposition:function(index){
+      var data = this.state.dataarr,
+          constant = this.constant;
+
+      for(var i=0,j = data.length;i < j;i++){
+        if(i == index){
+          data[i] = {
+            pos : {
+              left : (constant.winW - constant.cellW) / 2,
+              top : (constant.winH - constant.cellH) / 2
+            },
+            iscenter : true,
+            rotate:0
+          };
+        }else{
+          data[i] = {
+            pos : {
+              left : Math.ceil(Math.random()*(constant.winW - constant.cellW)),
+              top : Math.ceil(Math.random()*(constant.winH - constant.cellH))
+            },
+            iscenter : false,
+            rotate: getAutoDeg30()
+          };
+        }
+        //console.log(data[i]);
+      }
+
+      /*console.log(data);//如果为初始值说明在渲染时又重新置为了初始值，此时需要在渲染时判断*/
+      this.setState({
+        dataarr: data
+      });
+      //console.log(this.state.dataarr);
+     
+  },
+
+  center: function(index){
+    return (function(){
+      this.reposition(index);
+    }.bind(this));
+  },
+
+  getInitialState: function(){
+  /*//返回的是对象，对象中不能以分号结束';'*/
+    return {
+      dataarr : [
+        /*{
+          pos:{
+            left:0,
+            top:0
+          },
+          iscenter:false,
+          rotate:0
+        }*/
+      ]
+    };
+  },
+
+  componentDidMount:function(){
+    var winH = document.body.clientHeight,
+        winW = document.body.clientWidth;
+    
+    var node = ReactDOM.findDOMNode(this.refs.cell0);
+    var cellw = node.scrollWidth,
+        cellh = node.scrollHeight;
+    this.constant = {
+      winW:winW,
+      winH:winH,
+      cellW:cellw,
+      cellH:cellh
+    }
+      
+    this.reposition(0);
+  },
+
+  render:function(){
+    var Imgfigures = [];
+    data.forEach(function(value,index){
+    if(!this.state.dataarr[index]){
+      this.state.dataarr[index] = {
+        pos:{
+          left:0,
+          top:0
+        },
+        iscenter:false,
+        rotate:0
+      };
+    }
+
+      Imgfigures.push(<Imgfigure data={value} key={index} ref={'cell' + index} posinfo={this.state.dataarr[index]} center={this.center(index)} turn={this.turn(index)} />);
+    }.bind(this));
+
+    return (
+      <div className="state" ref="state">
+        { Imgfigures }
+      </div>
+    );
+  }
+});
+ReactDOM.render(
+  <Reactbox />,
+  document.getElementById('content')
+);
+</script>
+  </body>
+</html>

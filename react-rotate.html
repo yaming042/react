@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>React-rotate</title>
+    <script src="react.js"></script>
+    <script src="react-dom.js"></script>
+    <script src="JSXTransformer.js"></script>
+    <script src="jquery.min.js"></script>
+    <script src="remarkable.min.js"></script>
+<style type="text/css">
+  html,body{width:100%;height:100%;margin:0;padding:0;}
+  #content{width: 100%;height: 100%;background-color: #e2e2e2;overflow: hidden;}
+  .state{width: 100%;height: 100%;position: relative;}
+  .cellimg{
+    display: inline-block;
+    width:240px;
+    height:280px;
+    background-color: #fff;
+    margin:10px;
+    box-sizing: border-box;
+    position: absolute;
+    border-radius:4px;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(100, 100, 100, 0.3);
+    transition: all .8s;
+  }
+  .front img{width: 100%;}
+  figure{margin:0;}
+  figcaption{text-align: center;}
+  .box{position: relative;width: 100%;height: 100%;transform-style: preserve-3d;perspective:500px;box-sizing: border-box;}
+  .front, .back{
+  	position: absolute;
+  	left:0;
+  	top:0;
+  	width: 100%;
+  	height: 100%;
+    left:0;
+    top:0;
+  	box-sizing: border-box;
+    padding: 10px;
+
+  	transform-style:preserve-3d;
+  	backface-visibility:hidden;
+  	transition: all .8s linear;
+  }
+  .front{
+  	transform: rotateY(0deg);
+  	z-index: 2;
+  }
+  .back{
+  	transform:  rotateY(-180deg);
+  	z-index: 1;
+  }
+  div.inserve{
+    top:0;
+    left:0;
+    width:98%;
+    height:96%;
+    margin:1%;
+    transition: all .8s ease .8s;
+  }
+  div.inserve .front{
+    transform: rotateY(180deg);
+    z-index: 1;
+  }
+  div.inserve .back{
+    transform: rotateY(0deg);
+    z-index: 2;
+  }
+
+  .back-box{
+    width:100%;
+    height: 100%;
+    position: relative;
+  }
+  .close{
+    text-align: right;
+    height:20px;
+    font-size: 30px;
+    line-height: 20px;
+    padding-right:10px;
+  }
+
+  @media screen and (max-width: 640px){
+    .cellimg{width:150px;height:190px;}
+  }
+</style>
+
+  </head>
+  <body>
+    <div id="content"></div>
+    <script type="text/javascript">
+      $(window).ready(function(){
+        console.log("init page...");
+      });
+    </script>
+    <script type="text/jsx">
+    var data = [
+      {id:1,url:'images/1.jpg',title:'this for test',desc:'this for test ok'},
+      {id:2,url:'images/3.jpg',title:'this for test',desc:'this for test ok'},
+      {id:3,url:'images/5.jpg',title:'this for test',desc:'this for test ok'},
+      {id:4,url:'images/8.jpg',title:'this for test',desc:'this for test ok'},
+      {id:5,url:'images/10.jpg',title:'this for test',desc:'this for test ok'},
+      {id:6,url:'images/12.jpg',title:'this for test',desc:'this for test ok'},
+    ];
+    function getAutoDeg30(){
+      return (Math.random() > 0.5 ? '':'-') + Math.ceil(Math.random()*30);
+    }
+
+    var Frontbox = React.createClass({
+      render:function(){
+        return (
+          <figure className="front" >
+                <img src = { this.props.data.url } alt = { this.props.data.title } />
+                <figcaption> { this.props.data.title } </figcaption>
+            </figure>
+        );
+      }
+    });
+
+    var Backbox = React.createClass({
+      bbb:function(){
+        this.setState({
+          back:true
+        });
+        
+        this.props.bbb();
+      },
+      getInitialState:function(){
+        return {
+          back:false
+        };
+      },
+      render:function(){
+        return (
+          <div className="back">
+            <div className="back-box" id={ this.props.data.id } >          
+              { this.props.data.desc }
+              <div className="close" onClick={ this.bbb }>&times;</div>
+            </div>
+          </div>
+        );
+      }
+    });
+
+    var Box = React.createClass({
+      bbb:function(){
+        this.setState({
+          back:true
+        });
+        this.props.aaa();
+        
+      },
+      getInitialState:function(){
+        return {
+          back:false
+        };
+      },
+      render:function(){
+        return (
+          <div className="box">
+            <Frontbox data={this.props.data} />
+            <Backbox data={this.props.data} bbb={ this.bbb } />
+          </div>
+        );
+      }
+    });
+
+    var Imgfigure = React.createClass({
+      handleclick:function(e){
+        if(!this.props.posinfo.iscenter){//非中心图片
+          this.props.center();
+
+          e.stopPropagation();
+          e.preventDefault();
+        }else{//中心图片
+          if(!this.props.posinfo.current){//front在前面
+            this.props.turn();
+          }
+        }
+      },
+      aaa:function(){
+        this.setState({
+          back:true
+        });
+        this.props.close();
+        
+      },
+      getInitialState:function(){
+        return {
+          back:false
+        };
+      },
+      render:function(){
+        var styleobj = {};
+        var classname = "cellimg ";
+
+        styleobj = this.props.posinfo.pos;
+        if(this.props.posinfo.iscenter){
+          styleobj['zIndex'] = '1000';//增加z-index属性
+        }
+
+        if(this.props.posinfo.rotate){
+          ['Webkit','Ms','Moz'].forEach(function(value,index){
+            styleobj[value+'Transform'] = 'rotate('+this.props.posinfo.rotate+'deg)';
+          }.bind(this));
+        }
+
+        if(this.props.posinfo.current){
+          classname += "inserve";
+        }
+      
+        return (
+        <div className={ classname } style={ styleobj } onClick = { this.handleclick } >
+          <Box data={ this.props.data } aaa={ this.aaa } />
+        </div>
+        );
+      }
+    });
+
+    var Reactbox = React.createClass({
+      constant:{
+        winW:0,
+        winH:0,
+        cellW:0,
+        cellH:0
+      },
+
+      turn:function(index){
+        return function(){
+          var data = this.state.dataarr,
+              constant = this.constant;
+          if(!data[index].current)
+          {
+            data[index].current = !data[index].current;
+            data[index].pos = {
+              left:0,
+              top:0
+            };
+          }else{
+            data[index] = {
+                pos : {
+                  left : (constant.winW - constant.cellW) / 2,
+                  top : (constant.winH - constant.cellH) / 2
+                },
+                iscenter : true,
+                rotate:0,
+                current:false
+              };
+          }
+          this.setState({
+            dataarr:data
+          });
+        }.bind(this);
+      },
+
+      reposition:function(index){
+          var data = this.state.dataarr,
+              constant = this.constant;
+
+          for(var i=0,j = data.length;i < j;i++){
+            if(i == index){
+              data[i] = {
+                pos : {
+                  left : (constant.winW - constant.cellW) / 2,
+                  top : (constant.winH - constant.cellH) / 2
+                },
+                iscenter : true,
+                rotate:0,
+                current:false
+              };
+            }else{
+              data[i] = {
+                pos : {
+                  left : Math.ceil(Math.random()*(constant.winW - constant.cellW)),
+                  top : Math.ceil(Math.random()*(constant.winH - constant.cellH))
+                },
+                iscenter : false,
+                rotate: getAutoDeg30(),
+                current:false
+              };
+            }
+          }
+
+          /*console.log(data);//如果为初始值说明在渲染时又重新置为了初始值，此时需要在渲染时判断*/
+          this.setState({
+            dataarr: data
+          });
+         
+      },
+
+      center: function(index){
+        return (function(){
+          this.reposition(index);
+        }.bind(this));
+      },
+
+      closeback:function(index){
+      /*如果state还是初始值，可能是赋值错误导致的*/
+        return function(){
+          var data = this.state.dataarr,
+            constant = this.constant;
+
+          if(data[index].current){
+            data[index] = {
+                  pos : {
+                    left : (constant.winW - constant.cellW) / 2,
+                    top : (constant.winH - constant.cellH) / 2
+                  },
+                  iscenter : true,
+                  rotate:0,
+                  current:false
+                };
+
+
+            this.setState({
+                dataarr: data
+            });
+            
+            console.log(index);
+          }
+        }.bind(this);
+        
+      },
+
+      getInitialState: function(){
+      /*//返回的是对象，对象中不能以分号结束';'*/
+        return {
+          dataarr : [
+            /*{
+              pos:{
+                left:0,
+                top:0
+              },
+              iscenter:false,//是否是中心图片
+              rotate:0,
+              current:false//
+            }*/
+          ]
+        };
+      },
+
+      componentDidMount:function(){
+        var winH = document.body.clientHeight,
+            winW = document.body.clientWidth;
+        
+        var node = ReactDOM.findDOMNode(this.refs.cell0);
+        var cellw = node.scrollWidth,
+            cellh = node.scrollHeight;
+        this.constant = {
+          winW:winW,
+          winH:winH,
+          cellW:cellw,
+          cellH:cellh
+        }
+          
+        this.reposition(0);
+      },
+
+      render:function(){
+        var Imgfigures = [];
+        data.forEach(function(value,index){
+        if(!this.state.dataarr[index]){
+          this.state.dataarr[index] = {
+            pos:{
+              left:0,
+              top:0
+            },
+            iscenter:false,
+            rotate:0,
+            current:false
+          };
+        }
+
+          Imgfigures.push(<Imgfigure data={ value } key={index} ref={'cell' + index } posinfo={ this.state.dataarr[index] } center={ this.center(index) } turn={ this.turn(index) } close={ this.closeback(index) } />);
+        }.bind(this));
+
+        return (
+          <div className="state" ref="state">
+            { Imgfigures }
+          </div>
+        );
+      }
+    });
+    ReactDOM.render(
+      <Reactbox />,
+      document.getElementById('content')
+    );
+    </script>
+  </body>
+</html>
